@@ -3,7 +3,13 @@ import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { CdkEnvStack } from "../lib/cdk-env-stack";
 import { CommonStack } from "../lib/cdk-common-stack";
+import { StackName } from "../@types/stack-props";
 
+// HINT: 增加每个Stack的证书
+const certMap = new Map<StackName, string>();
+certMap.set("sandbox", "ASCAUBQCIOHWSEFYGQSE4");
+
+const stackName = (process.env.STACK_NAME ?? "sandbox") as StackName;
 const app = new cdk.App();
 
 const env = {
@@ -17,18 +23,11 @@ const commonStack = new CommonStack(app, "CdkCommonStack", {
 });
 cdk.Tags.of(commonStack).add("stack", commonStack.stackName);
 
-const envStack = new CdkEnvStack(app, "CdkEnvStack", {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  env,
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
-  stackName: process.env.STACK_NAME ?? "sandbox",
-  iamCertificateId: process.env.IamCertID ?? "ASCAUBQCIOHWSEFYGQSE4",
-});
-
-cdk.Tags.of(envStack).add("stack", envStack.stackName);
+if (certMap.get(stackName)) {
+  const envStack = new CdkEnvStack(app, "CdkEnvStack", {
+    env,
+    stackName,
+    iamCertificateId: certMap.get(stackName)!,
+  });
+  cdk.Tags.of(envStack).add("stack", envStack.stackName);
+}

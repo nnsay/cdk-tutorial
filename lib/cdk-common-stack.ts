@@ -10,7 +10,7 @@ import * as path from "path";
 
 export class CommonStack extends cdk.Stack {
   // 泛域名证书
-  public readonly certArn: string;
+  public readonly serverCertificateName: string;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -44,11 +44,13 @@ export class CommonStack extends cdk.Stack {
       path: "/cloudfront/",
     });
 
-    this.certArn = domainCert.attrArn;
+    this.serverCertificateName = domainCert.attrArn;
 
-    new cdk.CfnOutput(this, "iamCertificateId", {
-      value: domainCert.attrArn,
-      exportName: "iamCertificateId",
+    // WARN: ServerCertificate仅仅支持Arn属性,所以这里输出名称而不是证书ID
+    // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-servercertificate.html
+    new cdk.CfnOutput(this, "serverCertificateName", {
+      value: domainCert.serverCertificateName!,
+      exportName: "serverCertificateName",
     });
   }
 }
